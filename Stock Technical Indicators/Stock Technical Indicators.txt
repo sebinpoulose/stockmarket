@@ -1,0 +1,35 @@
+GENERAL INPUTS
+
+symbol= eg MSFT
+interval= from daily, weekly, monthly
+time_period= eg 60 , 200
+series_type=open
+datatype=csv
+apikey=demo
+
+simple moving average (SMA)
+function=SMA
+
+exponential moving average (EMA)
+function=EMA
+
+weighted moving average (WMA)
+function=WMA
+
+double exponential moving average (DEMA)
+function=DEMA
+
+triple exponential moving average (TEMA)
+function=TEMA
+
+triangular moving average (TRIMA)
+function=TRIMA
+
+Kaufman adaptive moving average (KAMA)
+function=KAMA
+
+MIDPOINT
+function=MIDPOINT
+
+MIDPRICE
+function=MIDPRICE
