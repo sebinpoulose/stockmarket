@@ -1,0 +1,35 @@
+INPUT PATTERN for testing exchange rates
+
+apikey=demo
+datatype=csv
+
+
+CURRENCY_EXCHANGE_RATE // JSON ONLY
+
+function=CURRENCY_EXCHANGE_RATE
+from_currency= eg BTC
+to_currency= eg USD
+======================================
+
+GENERAL INPUTS
+
+from_symbol=EUR
+to_symbol=USD
+apikey=demo
+datatype=csv
+
+FX_INTRADAY
+function=FX_INTRADAY
+interval= any of 1min, 5min, 15min, 30min, 60min
+
+FX_DAILY
+function=FX_DAILY
+
+FX_WEEKLY
+function=FX_WEEKLY
+
+FX_MONTHLY
+function=FX_MONTHLY
+
+
+
