@@ -1,1 +1,3 @@
-# corrently working on global stock data
+working on global stock data
+finished
+working on foreign exchange
