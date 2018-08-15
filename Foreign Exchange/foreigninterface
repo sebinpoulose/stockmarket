@@ -1,0 +1,94 @@
+from appJar import gui
+import requests
+import pandas as pd
+import matplotlib.pyplot as plt
+import sqlite3
+import json
+
+
+key='demo'
+datatype='csv'
+url="https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=BTC&to_currency=CNY&apikey=demo"
+
+def press(btn):
+    fromsymbol=app.getEntry("FROM : ")
+    tosymbol=app.getEntry("TO : ")
+    if(fromsymbol=='' or tosymbol==''):
+        app.errorBox("error","symbol of currrency must not be blank")
+        return
+    elif(btn=='Get Exchange Rate'):
+        url="https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency="+fromsymbol+"&to_currency="+tosymbol+"&apikey="+key
+        #print url       ############################################################ current dev
+        try:
+            jsonfile = json.loads(requests.get(url).text)
+
+        except:
+            app.errorBox("error","Invalid symbol of currency")        
+        return
+    else:
+        optedfunction=app.getOptionBox("function")
+        if(optedfunction=="DAILY"):
+            optedfunction='FX_DAILY'
+        elif(optedfunction=="WEEKLY"):
+            optedfunction='FX_WEEKLY'
+        elif(optedfunction=="MONTHLY"):
+            optedfunction='FX_MONTHLY'
+        else:
+            optedfunction='FX_INTRADAY'
+            tosymbol+='&interval=5min'
+        
+        url="https://www.alphavantage.co/query?function="+optedfunction+"&from_symbol="+fromsymbol+"&to_symbol="+tosymbol+"&apikey="+key+"&datatype="+datatype
+        #print url
+        try:
+            csvdata = pd.read_csv(url)
+            ytemp=[]
+            xtemp=[]
+            for row in csvdata.values:
+                ytemp.append(row[1])
+                xtemp.append(row[2])
+        except:
+            app.errorBox("error","symbol of currency is incorrect !")
+            return
+
+        if(btn=='View Graph'):
+            y=ytemp[:]
+            x=xtemp[:]
+            y.reverse()
+            x.reverse()
+            x_axis = range(len(x))
+            plt.xticks(x_axis, x)
+            plt.plot(x_axis, y)
+            plt.xlabel('Time Stamp')
+            plt.ylabel('Values')
+            plt.show()
+            ############################################################
+        elif(btn=='Save as Excel'):
+            try:            
+                filename=app.saveBox(title=None, fileName=fromsymbol+"_to_"+tosymbol, dirName=None, fileExt=".csv", fileTypes=None, asFile=None)
+                csvdata.to_csv(filename)
+            except:
+                pass
+        elif(btn=='Save to Database'): 
+            try:
+                con = sqlite3.connect('db.sqlite')
+                filename=app.saveBox(title=None, fileName=fromsymbol+"_to_"+tosymbol, dirName=None, fileExt=None, fileTypes=None, asFile=None)
+                a=filename.split('/')
+                filename=a[-1]
+                csvdata.to_sql(filename, con)
+            except:
+                app.errorBox("Error","Database entry failed !")
+                return
+
+app = gui('unnamed',"600x600")
+app.setFont(18)
+app.setBg("grey")
+
+app.addLabelEntry("FROM : ",1,0)
+app.addLabelEntry("TO : ",2,0)
+app.addButton("Get Exchange Rate",press,3,0)
+
+app.addLabel("y","TIME SERIES : ",4,0)
+app.addOptionBox("function", ["DAILY", "WEEKLY", "MONTHLY", "INTRADAY"],5,0)
+app.addButtons(["View Graph","Save to Database","Save as Excel"], press,6,0)
+
+app.go()
