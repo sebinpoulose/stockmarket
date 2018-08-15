@@ -2,6 +2,7 @@ from appJar import gui
 import requests
 import pandas as pd
 import matplotlib.pyplot as plt
+import sqlite3
 
 
 key='demo'
@@ -9,7 +10,6 @@ datatype='csv'
 
 
 def toolbar(btn):
-    pass
     #print(btn)
     #if btn == "LOGOUT": logout()
     #elif btn == "FILL": app.setTabBg("Tabs", app.getTabbedFrameSelectedTab("Tabs"), app.colourBox())
@@ -17,8 +17,8 @@ def toolbar(btn):
     #elif btn == "CALENDAR": app.showSubWindow("DatePicker")
     #elif btn == "ADDRESS-BOOK": app.showSubWindow("AddressBook")
     #elif btn == "MAP": app.showSubWindow("Maps")
-    #elif btn == "ACCESS": app.showAccess()
-    #elif btn == "EXIT": app.stop()
+    if btn == "SETTINGS": pass
+    elif btn == "EXIT": app.stop()
 
     
 def press(btn):
@@ -54,7 +54,7 @@ def press(btn):
             ytemp.append(row[1])
             xtemp.append(row[0])
     except:
-        print 'error, check the symbol '
+        app.errorBox("error","symbol of equity is incorrect !")
         return
 
     if(btn=='View Graph'):
@@ -77,14 +77,22 @@ def press(btn):
             csvdata.to_csv(filename)
         except:
             pass
-    elif(btn=='Save to Database'):
-        pass
+    elif(btn=='Save to Database'):  ################     under    test
+        try:
+            con = sqlite3.connect('db.sqlite')
+            filename=app.saveBox(title=None, fileName=optedsymbol, dirName=None, fileExt=None, fileTypes=None, asFile=None)
+            a=filename.split('/')
+            filename=a[-1]
+            csvdata.to_sql(filename, con)
+        except:
+            print "error sql convertion"
+            return
 
 app = gui('unnamed',"600x600")
+app.setFont(18)
 app.setBg("grey")
 
-
-app.addToolbar(["TEMP1", "TEMP2", "TEMP3", "TEMP4", "TEMP5", "TEMP6", "TEMP7","EXIT"], toolbar, findIcon=True)
+app.addToolbar(["TEMP1", "TEMP2", "TEMP3", "TEMP4", "TEMP5", "TEMP6", "SETTINGS","EXIT"], toolbar, findIcon=True)
 app.addStatusbar(header="STATUS ",fields=1, side="RIGHT")
 app.setStatusbarWidth(20, field=0)
 app.setStatusbar("ready", field=0)
