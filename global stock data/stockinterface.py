@@ -23,7 +23,11 @@ def toolbar(btn):
     
 def press(btn):
     optedsymbol=app.getEntry("SYMBOL OF THE EQUITY : ")
-    optedgraphsize=app.getEntry("NO OF DATA POINTS : ")
+    if(optedsymbol==''):
+        app.errorBox("error","symbol of equity must not be blank")
+        return
+        
+    optedgraphsize=app.getEntry("NO  OF   DATA  POINTS   : ")
     if(optedgraphsize==''):
         optedgraphsize=None
     else:
@@ -41,7 +45,7 @@ def press(btn):
     #url generation
     url='https://www.alphavantage.co/query?function='+optedfunction+'&symbol='+optedsymbol+'&apikey='+key+'&datatype='+datatype
     
-    ############################################################
+        ############################################################
     try:
         csvdata = pd.read_csv(url)
         ytemp=[]
@@ -53,33 +57,41 @@ def press(btn):
         print 'error, check the symbol '
         return
 
-        
-    y=ytemp[0:optedgraphsize]
-    x=xtemp[0:optedgraphsize]
+    if(btn=='View Graph'):
+        y=ytemp[0:optedgraphsize]
+        x=xtemp[0:optedgraphsize]
 
-    y.reverse()
-    x.reverse()
+        y.reverse()
+        x.reverse()
 
-    x_axis = range(len(x))
-    plt.xticks(x_axis, x)
-    plt.plot(x_axis, y)
-    plt.xlabel('Time Stamp')
-    plt.ylabel('Values')
-    plt.show()
-    ############################################################
+        x_axis = range(len(x))
+        plt.xticks(x_axis, x)
+        plt.plot(x_axis, y)
+        plt.xlabel('Time Stamp')
+        plt.ylabel('Values')
+        plt.show()
+        ############################################################
+    elif(btn=='Save as Excel'):
+        try:            
+            filename=app.saveBox(title=None, fileName=optedsymbol, dirName=None, fileExt=".csv", fileTypes=None, asFile=None)
+            csvdata.to_csv(filename)
+        except:
+            pass
+    elif(btn=='Save to Database'):
+        pass
 
-app = gui('unnamed',"1000x650")
+app = gui('unnamed',"600x600")
+app.setBg("grey")
+
 
 app.addToolbar(["TEMP1", "TEMP2", "TEMP3", "TEMP4", "TEMP5", "TEMP6", "TEMP7","EXIT"], toolbar, findIcon=True)
+app.addStatusbar(header="STATUS ",fields=1, side="RIGHT")
+app.setStatusbarWidth(20, field=0)
+app.setStatusbar("ready", field=0)
 
-app.addLabel("u","PROGRAM NAME")
 app.addLabelEntry("SYMBOL OF THE EQUITY : ",1,0)
-app.addLabelEntry("NO OF DATA POINTS : ",1,1)
-app.addLabel("y","TIME SERIES : ",1,2)
-app.addOptionBox("function", ["DAILY", "WEEKLY", "MONTHLY", "INTRADAY"],1,3)
-
-
-app.addButtons(["Submit"], press,2)
-
-
+app.addLabelEntry("NO  OF   DATA  POINTS   : ",2,0)
+app.addLabel("y","TIME SERIES : ",3,0)
+app.addOptionBox("function", ["DAILY", "WEEKLY", "MONTHLY", "INTRADAY"],4,0)
+app.addButtons(["View Graph","Save to Database","Save as Excel"], press,5,0)
 app.go()
