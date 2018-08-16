@@ -10,6 +10,7 @@ key='demo'
 datatype='csv'
 url="https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=BTC&to_currency=CNY&apikey=demo"
 
+
 def press(btn):
     fromsymbol=app.getEntry("FROM : ")
     tosymbol=app.getEntry("TO : ")
@@ -18,12 +19,35 @@ def press(btn):
         return
     elif(btn=='Get Exchange Rate'):
         url="https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency="+fromsymbol+"&to_currency="+tosymbol+"&apikey="+key
-        #print url       ############################################################ current dev
+        #print url       ############################################################ current dev        
         try:
             jsonfile = json.loads(requests.get(url).text)
 
-        except:
-            app.errorBox("error","Invalid symbol of currency")        
+            curcode= jsonfile['Realtime Currency Exchange Rate']['1. From_Currency Code']
+            curname= jsonfile['Realtime Currency Exchange Rate']['2. From_Currency Name']
+            curname+=" ("+curcode+")"
+
+            toname= jsonfile['Realtime Currency Exchange Rate']['4. To_Currency Name']
+            tocode= jsonfile['Realtime Currency Exchange Rate']['3. To_Currency Code']
+            toname+=" ("+tocode+")"
+
+            rate= jsonfile['Realtime Currency Exchange Rate']['5. Exchange Rate']
+            refresh= jsonfile['Realtime Currency Exchange Rate']['6. Last Refreshed']
+            timezone= jsonfile['Realtime Currency Exchange Rate']['7. Time Zone']
+
+
+            try:
+                app.setLabel("l3",curname+" to "+toname)
+                app.setLabel("l4","Exchange rate : "+rate)
+                app.setLabel("l5","Last refreshed : "+refresh)
+                app.setLabel("l6","Time Zone : "+timezone)
+                app.showSubWindow("two")
+            except:
+                pass
+
+        except Exception as e:
+            #print(e)
+            app.errorBox("Error","Invalid symbol of currency")        
         return
     else:
         optedfunction=app.getOptionBox("function")
@@ -45,7 +69,7 @@ def press(btn):
             xtemp=[]
             for row in csvdata.values:
                 ytemp.append(row[1])
-                xtemp.append(row[2])
+                xtemp.append(row[0])
         except:
             app.errorBox("error","symbol of currency is incorrect !")
             return
@@ -79,16 +103,29 @@ def press(btn):
                 app.errorBox("Error","Database entry failed !")
                 return
 
+
 app = gui('unnamed',"600x600")
 app.setFont(18)
 app.setBg("grey")
+
 
 app.addLabelEntry("FROM : ",1,0)
 app.addLabelEntry("TO : ",2,0)
 app.addButton("Get Exchange Rate",press,3,0)
 
+
 app.addLabel("y","TIME SERIES : ",4,0)
 app.addOptionBox("function", ["DAILY", "WEEKLY", "MONTHLY", "INTRADAY"],5,0)
 app.addButtons(["View Graph","Save to Database","Save as Excel"], press,6,0)
+
+
+app.startSubWindow("two")
+app.addLabel("l2", "Realtime Exchange Rate",0,0)
+app.addLabel("l3","",1,0)
+app.addLabel("l4","",2,0)
+app.addLabel("l5","",3,0)
+app.addLabel("l6","",4,0)
+app.stopSubWindow()
+
 
 app.go()
