@@ -4,18 +4,21 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import sqlite3
 import json
+import pickle
 import os
 
-#app.addWebLink ( "RAJAGIRI WEBSITE", "https://www.rajagiritech.ac.in/Home/Index.asp")
 #############################################################################################################
+
 key='VCZZ0OCQ6IY3KJLQ'
-#key='demo'
+key='demo'
 datatype='csv'
 conn = sqlite3.connect('db.sqlite')
 cur = conn.cursor()
+
 #############################################################################################################
+
 def toolbar(btn):
-    if btn == "EXIT": app.stop()
+    if btn == "Exit": app.stop()
     elif btn == "Full Screen":
         if app.exitFullscreen():
             app.setGeometry("600x600")
@@ -73,7 +76,7 @@ def globalstockdata(btn):
             csvdata.to_csv(filename)
         except:
             pass
-    elif(btn=='Save to Database'):  ################     under    test
+    elif(btn=='Save to Database'):  ###############undertest
         try:
             con = sqlite3.connect('db.sqlite')
             filename=app.saveBox(title=None, fileName=optedsymbol, dirName=None, fileExt=None, fileTypes=None, asFile=None)
@@ -219,7 +222,7 @@ def crypto(btn):
             plt.plot(x_axis,xadd)
             plt.xlabel('Time Stamp')
             plt.ylabel('Values')
-            plt.legend([fromsymbol,tosymbol]) #,loc='upper left'
+            plt.legend([fromsymbol,tosymbol])
             plt.show()
         elif(btn=='Save as Excel '):
             try:            
@@ -280,7 +283,7 @@ def compare(btn):
         plt.plot(x_axis, y)
         plt.xlabel('Time Stamp')
         plt.ylabel('Values')
-    plt.legend(equity) #,loc='upper left'    
+    plt.legend(equity)    
     plt.show()
 
 ###############################################################################################################
@@ -397,65 +400,69 @@ def emulator(btn):
             a=cur.fetchall()
             app.addGrid("g1",a,action=None, addRow=None)
         except:
-            app.errorBox("error","error executing the query")
+            app.errorBox("ERROR","Error executing the query")
             
 ###############################################################################################################
 
-app = gui("R-SMS")
+app = gui("UNNAMED")
 app.setBg("lightBlue")
 app.setGeom ( "fullscreen" )
-app.addToolbar(["TEMP1", "TEMP2", "TEMP3", "TEMP4", "TEMP5", "Full Screen","EXIT"], toolbar, findIcon=True)
+app.setFont(20)
+app.addToolbar(["TEMP1", "TEMP2", "TEMP3", "TEMP4", "About", "Full Screen","Exit"], toolbar, findIcon=True)
 app.addStatusbar(header="STATUS ",fields=1, side="RIGHT")
 app.setStatusbarWidth(20, field=0)
 app.setStatusbar("ready", field=0)
 
 app.startTabbedFrame("VIEW")
 
+app.startTab("Portfolio Management")
+
+app.stopTab()
+
 app.startTab("Global Stock Data Managment")
 #app.startPanedFrame("a")#app.startPanedFrameVertical("b")#app.stopPanedFrame()#app.stopPanedFrame()
-app.addLabelEntry("SYMBOL  OF  THE  EQUITY : ",1,0)
-app.addLabelEntry("NUMBER OF DATA POINTS : ",2,0)
-app.addLabel("pane1","TIME SERIES : ",3,0)
-app.addOptionBox("functionpane1", ["DAILY", "WEEKLY", "MONTHLY", "INTRADAY"],4,0)
-app.addButtons(["View Graph","Save to Database","Save as Excel"], globalstockdata,5,0)
+app.addLabelEntry("SYMBOL  OF  THE  EQUITY : ")
+app.addLabelEntry("NUMBER OF DATA POINTS : ")
+app.addLabel("pane1","TIME SERIES : ")
+app.addOptionBox("functionpane1", ["DAILY", "WEEKLY", "MONTHLY", "INTRADAY"])
+app.addButtons(["View Graph","Save to Database","Save as Excel"], globalstockdata)
 app.stopTab()
 
 app.startTab("Foreign Exchange Management")
-app.addLabelEntry("FROM : ",1,0)
-app.addLabelEntry("TO : ",2,0)
-app.addButton("Get Exchange Rate",exchange,3,0)
-app.addLabel("pane2","TIME SERIES - ",4,0)
-app.addOptionBox("functionpane2", ["DAILY", "WEEKLY", "MONTHLY", "INTRADAY"],5,0)
-app.addLabelEntry("NUMBER OF DATA POINTS - ",6,0)
-app.addButtons(["Visualize","Save To Database","Save As Excel"], exchange,7,0)
+app.addLabelEntry("FROM : ")
+app.addLabelEntry("TO : ")
+app.addButton("Get Exchange Rate",exchange)
+app.addLabel("pane2","TIME SERIES - ")
+app.addOptionBox("functionpane2", ["DAILY", "WEEKLY", "MONTHLY", "INTRADAY"])
+app.addLabelEntry("NUMBER OF DATA POINTS - ")
+app.addButtons(["Visualize","Save To Database","Save As Excel"], exchange)
 app.stopTab()
 
-app.startTab("Digital & Crypto Currency Management")
-# tosymbol equates to market.
-app.addLabelEntry("CRYPTO-CURRENCY SYMBOL : ",1,0)
-app.addLabelEntry("EXCHANGE MARKET SYMBOL : ",2,0)
-app.addLabelEntry("NUMBER OF DATA POINTS: ",3,0)
-app.addLabel("pane3","TIME SERIES : ",4,0)
-app.addOptionBox("functionpane3", ["DAILY", "WEEKLY", "MONTHLY", "INTRADAY"],5,0)
-app.addButtons(["View Graph ","Save to Database ","Save as Excel "], crypto,6,0)
+app.startTab("Digital & Crypto Currency Management") # tosymbol equates to market
+app.addLabelEntry("CRYPTO-CURRENCY SYMBOL : ")
+app.addLabelEntry("EXCHANGE MARKET SYMBOL : ")
+app.addLabelEntry("NUMBER OF DATA POINTS: ")
+app.addLabel("pane3","TIME SERIES : ")
+app.addOptionBox("functionpane3", ["DAILY", "WEEKLY", "MONTHLY", "INTRADAY"])
+app.addButtons(["View Graph ","Save to Database ","Save as Excel "],crypto)
 app.stopTab()
 
 app.startTab("Compare Stock Prices")
-app.addLabelEntry("SYMBOLS  OF  EQUITYS : ",1,0)
-app.addLabelEntry("NUMBER OF DATA POINTS :  ",2,0)
-app.addLabel("pane4","TIME SERIES : ",3,0)
-app.addOptionBox("functionpane4", ["DAILY", "WEEKLY", "MONTHLY", ],4,0)
-app.addOptionBox("function2pane4", ["SMA", "EMA", "WMA","DEMA","TEMA","TRIMA","KAMA","MIDPOINT","MIDPRICE"],5,0)
-app.addButton(" Visualize ", compare,6,0)
+app.addLabelEntry("SYMBOLS  OF  EQUITYS : ")
+app.addLabelEntry("NUMBER OF DATA POINTS :  ")
+app.addLabel("pane4","TIME SERIES : ")
+app.addOptionBox("functionpane4", ["DAILY", "WEEKLY", "MONTHLY", ])
+app.addOptionBox("function2pane4", ["SMA", "EMA", "WMA","DEMA","TEMA","TRIMA","KAMA","MIDPOINT","MIDPRICE"])
+app.addButton(" Visualize ",compare)
 app.stopTab()
 
 app.startTab("Stock Technical Indicators")
-app.addLabelEntry(" SYMBOL  OF  THE  EQUITY : ",1,0)
-app.addLabelEntry(" NUMBER OF DATA POINTS : ",2,0)
-app.addLabel("pane5","TIME SERIES : ",3,0)
-app.addOptionBox("functionpane5", ["DAILY", "WEEKLY", "MONTHLY", ],4,0)
-app.addOptionBox("function2pane5", ["SMA", "EMA", "WMA","DEMA","TEMA","TRIMA","KAMA","MIDPOINT","MIDPRICE"],5,0)
-app.addButtons([" View Graph "," Save to Database "," Save as Excel "], tech,6,0)
+app.addLabelEntry(" SYMBOL  OF  THE  EQUITY : ")
+app.addLabelEntry(" NUMBER OF DATA POINTS : ")
+app.addLabel("pane5","TIME SERIES : ")
+app.addOptionBox("functionpane5", ["DAILY", "WEEKLY", "MONTHLY", ])
+app.addOptionBox("function2pane5", ["SMA", "EMA", "WMA","DEMA","TEMA","TRIMA","KAMA","MIDPOINT","MIDPRICE"])
+app.addButtons([" View Graph "," Save to Database "," Save as Excel "], tech)
 app.stopTab()
 
 app.startTab("Database Emulator")
@@ -466,6 +473,15 @@ app.addLabelEntry("Enter Custom Query : ")
 app.addButton("Execute Query", emulator)
 app.stopTab()
 
+app.startTab("External Resources")
+app.addLabel("externallink","Links")
+app.addWebLink ( "Google Finanace", "https://www.google.com/finance")
+app.addWebLink ( "NSE India", "https://www.nseindia.com")
+app.addWebLink ( "BSE India", "https://www.bseindia.com")
+app.addWebLink ( "NASDAQ", "https://www.nasdaq.com")
+app.addWebLink ( "Investopedia", "https://www.investopedia.com")
+app.stopTab()
+
 app.startTab("Settings")
 
 app.stopTab()
@@ -473,6 +489,7 @@ app.stopTab()
 app.stopTabbedFrame()
 
 ##############################################################################################################
+
 app.startSubWindow("Exchange Rates")
 app.addLabel("l2", "Realtime Exchange Rate")
 app.addLabel("l3","")
@@ -480,6 +497,19 @@ app.addLabel("l4","")
 app.addLabel("l5","")
 app.addLabel("l6","")
 app.stopSubWindow()
+
+##############################################################################################################
+
+app.setTabBg('VIEW',"Portfolio Management","LightCoral")
+app.setTabBg('VIEW',"Global Stock Data Managment","PaleVioletRed")
+app.setTabBg('VIEW',"Foreign Exchange Management","LightCoral")
+app.setTabBg('VIEW',"Digital & Crypto Currency Management","SandyBrown")
+app.setTabBg('VIEW',"Compare Stock Prices","LightCoral")
+app.setTabBg('VIEW',"Stock Technical Indicators","LightSalmon")
+app.setTabBg('VIEW',"Database Emulator","DarkSalmon")
+app.setTabBg('VIEW',"External Resources","LightCoral")
+app.setTabBg('VIEW',"Settings","SIlver")
+
 ##############################################################################################################
 
 app.go()
