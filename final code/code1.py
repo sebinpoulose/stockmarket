@@ -9,16 +9,18 @@ import os
 
 #############################################################################################################
 
-key='VCZZ0OCQ6IY3KJLQ'
 key='demo'
 datatype='csv'
 conn = sqlite3.connect('db.sqlite')
 cur = conn.cursor()
+with open('filename.pickle', 'rb') as handle:
+    settingsfile = pickle.load(handle)
 
 #############################################################################################################
 
 def toolbar(btn):
     if btn == "Exit": app.stop()
+    elif btn=='About': app.showSubWindow("About")
     elif btn == "Full Screen":
         if app.exitFullscreen():
             app.setGeometry("600x600")
@@ -30,7 +32,7 @@ def toolbar(btn):
 def globalstockdata(btn):
     optedsymbol=app.getEntry("SYMBOL  OF  THE  EQUITY : ")
     if(optedsymbol==''):
-        app.errorBox("error","symbol of equity must not be blank")
+        app.errorBox("Error","symbol of equity must not be blank")
         return        
     optedgraphsize=app.getEntry("NUMBER OF DATA POINTS : ")
     if(optedgraphsize==''):
@@ -47,7 +49,6 @@ def globalstockdata(btn):
     else:
         optedfunction='TIME_SERIES_INTRADAY'
         optedsymbol+='&interval=5min'
-    #url generation
     url='https://www.alphavantage.co/query?function='+optedfunction+'&symbol='+optedsymbol+'&apikey='+key+'&datatype='+datatype        
     try:
         csvdata = pd.read_csv(url)
@@ -57,7 +58,7 @@ def globalstockdata(btn):
             ytemp.append(row[1])
             xtemp.append(row[0])
     except:
-        app.errorBox("error","symbol of equity is incorrect !")
+        app.errorBox("Error","Symbol of equity is incorrect !")
         return
     if(btn=='View Graph'):
         y=ytemp[0:optedgraphsize]
@@ -120,7 +121,7 @@ def exchange(btn):
                 app.showSubWindow("two")
             except:
                 pass
-        except Exception as e:
+        except:
             app.errorBox("Error","Invalid symbol of currency")        
         return
     else:
@@ -143,7 +144,7 @@ def exchange(btn):
                 ytemp.append(row[1])
                 xtemp.append(row[0])
         except:
-            app.errorBox("error","symbol of currency is incorrect !")
+            app.errorBox("Error","symbol of currency is incorrect !")
             return
         if(btn=='Visualize'):
             y=ytemp[0:optedgraphsize]
@@ -184,7 +185,7 @@ def crypto(btn):
     else:
         optedgraphsize=int(optedgraphsize)        
     if(fromsymbol=='' or tosymbol==''):
-        app.errorBox("error","symbol of currrency must not be blank")
+        app.errorBox("Error","symbol of currrency must not be blank")
         return
     else:
         optedfunction=app.getOptionBox("functionpane3")
@@ -207,7 +208,7 @@ def crypto(btn):
                 xtemp.append(row[0])
                 xaddon.append(row[5])
         except:
-            app.errorBox("error","symbol of currency is incorrect !")
+            app.errorBox("Error","symbol of currency is incorrect !")
             return
         if(btn=='View Graph '):
             y=ytemp[0:optedgraphsize]
@@ -349,7 +350,8 @@ def tech(btn):
 
 def emulator(btn):
     try:
-        app.removeGrid('g1')
+        sub=gui("secondary")
+        sub.removeGrid('g1')
     except:
         pass
     tablename=app.getEntry("Enter The Table Name : ")    
@@ -364,7 +366,8 @@ def emulator(btn):
         else:
             header=('column_id','column_name','datatype','notnull','default_value','primarykey')
             a=[header]+a
-            app.addGrid("g1",a,action=None, addRow=None)
+            sub.addGrid("g1",a,action=None, addRow=None)
+            sub.go()
     elif(btn=='Delete Table'):
         if(tablename==''):
             app.errorBox("error","tablename must not be blank")
@@ -387,7 +390,8 @@ def emulator(btn):
                  listheader.append(p[1])
             q=tuple(listheader)
             listheader=[q]+a
-            app.addGrid("g1",listheader,action=None, addRow=None)            
+            sub.addGrid("g1",listheader,action=None, addRow=None)
+            sub.go()            
         except:
             app.errorBox("error","table doesnot exist !")
     elif(btn=='Execute Query'):
@@ -398,10 +402,46 @@ def emulator(btn):
         try:
             cur.execute(query)
             a=cur.fetchall()
-            app.addGrid("g1",a,action=None, addRow=None)
+            sub.addGrid("g1",a,action=None, addRow=None)
+            sub.go()
         except:
-            app.errorBox("ERROR","Error executing the query")
+            app.errorBox("error","error executing the query") 
             
+###############################################################################################################
+
+def settings(btn):
+       if(btn=='Create New Database'):
+              dbname=app.saveBox(title="Enter new Database Name", fileName=None, dirName=None, fileExt='sqlite', fileTypes=None, asFile=None)
+              con = sqlite3.connect(dbname)
+              app.setLabel("title2","Current Database : "+dbname)
+              settingsfile['currentdatabase']=dbname
+       elif(btn=='Attach a Database'):
+              a=app.openBox(title="Select the Database",dirName=None)
+              if('.sqlite' not in a):
+                     app.errorBox("error","please select a sqlite file")
+                     return
+              con = sqlite3.connect(a)
+              app.setLabel("title2","Current Database : "+a)
+              settingsfile['currentdatabase']=a
+       elif(btn=='Delete a Database'):
+              try:
+                     a=app.openBox(title="Select the Database",dirName=None)
+                     if('.sqlite' not in a):
+                            app.errorBox("error","please select a sqlite file")
+                            return
+                     if(a in b['currentdatabase']):
+                            app.setLabel("title2","Current Database : db.sqlite")   ### default undeleteable database
+                     os.remove(a)
+              except:
+                     pass
+       elif(btn=='Save'):
+              gtype=app.getOptionBox("gt")
+              app.setLabel("title3", "Current Graph type : "+gtype)
+              settingsfile['graphtype']=gtype
+              
+       with open('filename.pickle', 'wb') as handle:
+                  pickle.dump(settingsfile, handle)
+
 ###############################################################################################################
 
 app = gui("UNNAMED")
@@ -483,7 +523,13 @@ app.addWebLink ( "Investopedia", "https://www.investopedia.com")
 app.stopTab()
 
 app.startTab("Settings")
-
+app.addLabel("title","Database Settings")
+app.addLabel("title2","Current Database : "+settingsfile['currentdatabase'])
+app.addButtons(["Create New Database","Attach a Database","Delete a Database"],settings)
+app.addLabel("title3", "Current Graph type : "+settingsfile['graphtype'])
+app.addLabel("title4","Change graph type")
+app.addOptionBox("gt", ["line graph", "dot graph"])
+app.addButton("Save", settings)
 app.stopTab()
 
 app.stopTabbedFrame()
@@ -509,6 +555,12 @@ app.setTabBg('VIEW',"Stock Technical Indicators","LightSalmon")
 app.setTabBg('VIEW',"Database Emulator","DarkSalmon")
 app.setTabBg('VIEW',"External Resources","LightCoral")
 app.setTabBg('VIEW',"Settings","SIlver")
+
+##############################################################################################################
+
+app.startSubWindow("About")
+app.addLabel("aboutpopup", "info about the pgm")
+app.stopSubWindow()
 
 ##############################################################################################################
 
