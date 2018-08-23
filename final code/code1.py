@@ -9,12 +9,16 @@ import os
 
 #############################################################################################################
 
+key='VCZZ0OCQ6IY3KJLQ'
 key='demo'
 datatype='csv'
-conn = sqlite3.connect('db.sqlite')
-cur = conn.cursor()
 with open('filename.pickle', 'rb') as handle:
     settingsfile = pickle.load(handle)
+base=settingsfile['currentdatabase']
+conn = sqlite3.connect(base)
+cur = conn.cursor()
+global graphtype
+graphtype=settingsfile['graphtype']
 
 #############################################################################################################
 
@@ -67,7 +71,7 @@ def globalstockdata(btn):
         x.reverse()
         x_axis = range(len(x))
         plt.xticks(x_axis, x)
-        plt.plot(x_axis, y)
+        plt.plot(x_axis, y,graphtype)
         plt.xlabel('Time Stamp')
         plt.ylabel('Values')
         plt.show()        
@@ -77,13 +81,12 @@ def globalstockdata(btn):
             csvdata.to_csv(filename)
         except:
             pass
-    elif(btn=='Save to Database'):  ###############undertest
+    elif(btn=='Save to Database'):  
         try:
-            con = sqlite3.connect('db.sqlite')
             filename=app.saveBox(title=None, fileName=optedsymbol, dirName=None, fileExt=None, fileTypes=None, asFile=None)
             a=filename.split('/')
             filename=a[-1]
-            csvdata.to_sql(filename, con)
+            csvdata.to_sql(filename, conn)
         except:
             app.errorBox("Error","Database entry failed !")
             return
@@ -118,7 +121,7 @@ def exchange(btn):
                 app.setLabel("l4","Exchange rate : "+rate)
                 app.setLabel("l5","Last refreshed : "+refresh)
                 app.setLabel("l6","Time Zone : "+timezone)
-                app.showSubWindow("two")
+                app.showSubWindow("Exchange Rates")
             except:
                 pass
         except:
@@ -153,7 +156,7 @@ def exchange(btn):
             x.reverse()
             x_axis = range(len(x))
             plt.xticks(x_axis, x)
-            plt.plot(x_axis, y)
+            plt.plot(x_axis,y,graphtype)
             plt.xlabel('Time Stamp')
             plt.ylabel('Values')
             plt.show()
@@ -165,11 +168,10 @@ def exchange(btn):
                 pass
         elif(btn=='Save To Database'): 
             try:
-                con = sqlite3.connect('db.sqlite')
                 filename=app.saveBox(title=None, fileName=fromsymbol+"_to_"+tosymbol, dirName=None, fileExt=None, fileTypes=None, asFile=None)
                 a=filename.split('/')
                 filename=a[-1]
-                csvdata.to_sql(filename, con)
+                csvdata.to_sql(filename, conn)
             except:
                 app.errorBox("Error","Database entry failed !")
                 return
@@ -219,8 +221,8 @@ def crypto(btn):
             xadd.reverse()
             x_axis = range(len(x))
             plt.xticks(x_axis, x)
-            plt.plot(x_axis, y)
-            plt.plot(x_axis,xadd)
+            plt.plot(x_axis, y,graphtype)
+            plt.plot(x_axis,xadd,graphtype)
             plt.xlabel('Time Stamp')
             plt.ylabel('Values')
             plt.legend([fromsymbol,tosymbol])
@@ -233,11 +235,10 @@ def crypto(btn):
                 pass
         elif(btn=='Save to Database '): 
             try:
-                con = sqlite3.connect('db.sqlite')
                 filename=app.saveBox(title=None, fileName=fromsymbol+"_to_"+tosymbol, dirName=None, fileExt=None, fileTypes=None, asFile=None)
                 a=filename.split('/')
                 filename=a[-1]
-                csvdata.to_sql(filename, con)
+                csvdata.to_sql(filename, conn)
             except:
                 app.errorBox("Error","Database entry failed !")
                 return
@@ -281,7 +282,7 @@ def compare(btn):
         x.reverse()
         x_axis = range(len(x))
         plt.xticks(x_axis, x)
-        plt.plot(x_axis, y)
+        plt.plot(x_axis, y,graphtype)
         plt.xlabel('Time Stamp')
         plt.ylabel('Values')
     plt.legend(equity)    
@@ -325,7 +326,7 @@ def tech(btn):
         x.reverse()
         x_axis = range(len(x))
         plt.xticks(x_axis, x)
-        plt.plot(x_axis, y)
+        plt.plot(x_axis, y,graphtype)
         plt.xlabel('Time Stamp')
         plt.ylabel('Values')
         plt.show()
@@ -337,11 +338,10 @@ def tech(btn):
             pass
     elif(btn==' Save to Database '): 
         try:
-            con = sqlite3.connect('db.sqlite')
             filename=app.saveBox(title=None, fileName=optedsymbol, dirName=None, fileExt=None, fileTypes=None, asFile=None)
             a=filename.split('/')
             filename=a[-1]
-            csvdata.to_sql(filename, con)
+            csvdata.to_sql(filename, conn)
         except:
             app.errorBox("Error","Database entry failed !")
             return
@@ -412,7 +412,8 @@ def emulator(btn):
 def settings(btn):
        if(btn=='Create New Database'):
               dbname=app.saveBox(title="Enter new Database Name", fileName=None, dirName=None, fileExt='sqlite', fileTypes=None, asFile=None)
-              con = sqlite3.connect(dbname)
+              conn = sqlite3.connect(dbname)
+              cur = conn.cursor()
               app.setLabel("title2","Current Database : "+dbname)
               settingsfile['currentdatabase']=dbname
        elif(btn=='Attach a Database'):
@@ -420,25 +421,43 @@ def settings(btn):
               if('.sqlite' not in a):
                      app.errorBox("error","please select a sqlite file")
                      return
-              con = sqlite3.connect(a)
+              conn = sqlite3.connect(a)
+              cur = conn.cursor()
               app.setLabel("title2","Current Database : "+a)
               settingsfile['currentdatabase']=a
        elif(btn=='Delete a Database'):
               try:
                      a=app.openBox(title="Select the Database",dirName=None)
-                     if('.sqlite' not in a):
-                            app.errorBox("error","please select a sqlite file")
+                     if('db.sqlite' in a):
+                            app.errorBox("Error","Bulitin database cannot be deleted !")
                             return
-                     if(a in b['currentdatabase']):
-                            app.setLabel("title2","Current Database : db.sqlite")   ### default undeleteable database
+                     elif('.sqlite' not in a):
+                            app.errorBox("Error","please select a sqlite file")
+                            return
+                     elif(a in settingsfile['currentdatabase']):
+                            app.setLabel("title2","Current Database : db.sqlite")### default undeleteable database
+                            conn = sqlite3.connect('db.sqlite')
+                            cur = conn.cursor()
+                            settingsfile['currentdatabase']='db.sqlite'
                      os.remove(a)
               except:
                      pass
        elif(btn=='Save'):
-              gtype=app.getOptionBox("gt")
-              app.setLabel("title3", "Current Graph type : "+gtype)
-              settingsfile['graphtype']=gtype
-              
+           gtype=app.getOptionBox("gt")
+           app.setLabel("title3", "Current Graph type : "+gtype)
+           if(gtype=="line graph"):
+                gtype='-'
+           elif(gtype=="stripped graph"):
+                gtype='--'
+           elif(gtype=="strip-dot graph"):
+                gtype='-.'
+           elif(gtype=="dot graph"):
+                gtype=':'
+           elif(gtype=='Points'):
+                gtype='ro'
+       settingsfile['graphtype']=gtype
+       global graphtype
+       graphtype=gtype
        with open('filename.pickle', 'wb') as handle:
                   pickle.dump(settingsfile, handle)
 
@@ -460,7 +479,6 @@ app.startTab("Portfolio Management")
 app.stopTab()
 
 app.startTab("Global Stock Data Managment")
-#app.startPanedFrame("a")#app.startPanedFrameVertical("b")#app.stopPanedFrame()#app.stopPanedFrame()
 app.addLabelEntry("SYMBOL  OF  THE  EQUITY : ")
 app.addLabelEntry("NUMBER OF DATA POINTS : ")
 app.addLabel("pane1","TIME SERIES : ")
@@ -478,7 +496,7 @@ app.addLabelEntry("NUMBER OF DATA POINTS - ")
 app.addButtons(["Visualize","Save To Database","Save As Excel"], exchange)
 app.stopTab()
 
-app.startTab("Digital & Crypto Currency Management") # tosymbol equates to market
+app.startTab("Digital & Crypto Currency Management") 
 app.addLabelEntry("CRYPTO-CURRENCY SYMBOL : ")
 app.addLabelEntry("EXCHANGE MARKET SYMBOL : ")
 app.addLabelEntry("NUMBER OF DATA POINTS: ")
@@ -528,7 +546,7 @@ app.addLabel("title2","Current Database : "+settingsfile['currentdatabase'])
 app.addButtons(["Create New Database","Attach a Database","Delete a Database"],settings)
 app.addLabel("title3", "Current Graph type : "+settingsfile['graphtype'])
 app.addLabel("title4","Change graph type")
-app.addOptionBox("gt", ["line graph", "dot graph"])
+app.addOptionBox("gt", ["line graph","stripped graph", "strip-dot graph","dot graph",'Points'])
 app.addButton("Save", settings)
 app.stopTab()
 
