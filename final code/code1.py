@@ -9,7 +9,7 @@ import os
 
 #############################################################################################################
 
-key='VCZZ0OCQ6IY3KJLQ'
+key=''
 key='demo'
 datatype='csv'
 with open('filename.pickle', 'rb') as handle:
